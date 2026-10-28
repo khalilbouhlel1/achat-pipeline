@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     tools {
-        // Updated to match your Jenkins server configuration
         maven 'apache-maven-3.10.0' 
         jdk 'jdk21'
     }
@@ -16,7 +15,8 @@ pipeline {
         
         stage('Build & Test') {
             steps {
-                sh 'mvn clean install'
+                // Changed from 'sh' to 'bat' for Windows execution
+                bat 'mvn clean install'
             }
             post {
                 always {
@@ -27,7 +27,8 @@ pipeline {
         
         stage('Package') {
             steps {
-                sh 'mvn package -DskipTests'
+                // Changed from 'sh' to 'bat' for Windows execution
+                bat 'mvn package -DskipTests'
             }
         }
     }
