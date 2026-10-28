@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     tools {
-        // These names must match your Jenkins "Manage Jenkins -> Tools" configuration
-        maven 'Maven-3.9' 
-        jdk 'JDK-17'
+        // Updated to match your Jenkins server configuration
+        maven 'apache-maven-3.10.0' 
+        jdk 'jdk21'
     }
 
     stages {
@@ -16,7 +16,6 @@ pipeline {
         
         stage('Build & Test') {
             steps {
-                // This executes all the Mockito and MockMvc tests we just wrote
                 sh 'mvn clean install'
             }
             post {
