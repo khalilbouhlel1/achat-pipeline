@@ -1,0 +1,7 @@
+services:
+  app-achat:
+    image: nejimissaoui/achat-devops:latest
+    container_name: achat-container
+    ports:
+      - "8089:8089"
+    restart: unless-stopped
