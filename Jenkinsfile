@@ -91,8 +91,9 @@ pipeline {
         stage('8. Deploy Our Image') {
             steps {
                 bat """
+                    docker network create achat-net 2>nul || exit /b 0
                     docker rm -f ${CONTAINER_NAME} 2>nul || exit /b 0
-                    docker run -d --name ${CONTAINER_NAME} -p 8089:8089 ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker run -d --name ${CONTAINER_NAME} --network achat-net -p 8089:8089 -e SPRING_DATASOURCE_URL="jdbc:mysql://achat-mysql:3306/achat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=root ${IMAGE_NAME}:${IMAGE_TAG}
                 """
             }
         }
