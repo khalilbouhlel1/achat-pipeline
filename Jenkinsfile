@@ -6,7 +6,7 @@ pipeline {
         JDK_HOME     = "C:\\Program Files\\Java\\jdk-21.0.12"
 
         GIT_REPO_URL = "https://github.com/khalilbouhlel1/achat-pipeline.git"
-        GIT_BRANCH   = "main"
+        GIT_BRANCH   = "dev-khalil"
 
         SONAR_URL    = "http://localhost:9000"
         SONAR_TOKEN  = "squ_34b303ac2a595be9b3162eba30610c84f37ef89d"
