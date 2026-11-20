@@ -103,4 +103,19 @@ public class StockServiceImplTest {
         Assertions.assertEquals("Stock Modifié", updatedStock.getLibelleStock());
         verify(stockRepository, times(1)).save(s);
     }
+
+    @Test
+    public void testRetrieveStatusStock() {
+        Stock s = new Stock();
+        s.setLibelleStock("Stock Rouge");
+        s.setQte(2);
+        s.setQteMin(10);
+        when(stockRepository.retrieveStatusStock()).thenReturn(Arrays.asList(s));
+
+        String result = stockService.retrieveStatusStock();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertTrue(result.contains("Stock Rouge"));
+        verify(stockRepository, times(1)).retrieveStatusStock();
+    }
 }

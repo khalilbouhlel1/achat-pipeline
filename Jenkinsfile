@@ -59,7 +59,8 @@ pipeline {
                         -Dsonar.host.url=${SONAR_URL} ^
                         -Dsonar.token=${SONAR_TOKEN} ^
                         -Dsonar.java.coveragePlugin=jacoco ^
-                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml ^
+                        -Dsonar.coverage.exclusions="**/entities/**,**/AchatApplication.java,**/OpenApiConfig.java"
                 """
             }
         }
