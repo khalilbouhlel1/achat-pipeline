@@ -28,7 +28,7 @@ tools {
 
         stage('UNIT TESTS') {
             steps {
-                bat 'mvn test -Dspring.datasource.url="jdbc:h2:mem:achat;DB_CLOSE_DELAY=-1;MODE=MySQL" -Dspring.datasource.driver-class-name=org.h2.Driver -Dspring.datasource.username=sa -Dspring.datasource.password= -Dspring.jpa.database-platform=org.hibernate.dialect.H2Dialect -Dspring.jpa.hibernate.ddl-auto=create-drop'
+                bat 'mvn test'
             }
         }
 
