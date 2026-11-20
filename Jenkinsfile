@@ -2,16 +2,17 @@ pipeline {
     agent any
 
     environment {
-        // Use your installed JDK 17 for compiling & testing the Spring Boot project
-        JDK17_HOME   = "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.4.101-hotspot"
-        // Use your Java 25 for the SonarQube 26.10 scanner
-        JDK25_HOME   = "C:\\Java\\jdk-25.0.4"
+        // Installed JDK on system
+        JDK_HOME     = "C:\\Program Files\\Java\\jdk-21.0.12"
 
         GIT_REPO_URL = "https://github.com/khalilbouhlel1/achat-pipeline.git"
-        GIT_BRANCH   = "main" // Change to 'main' or 'master' if you merged your branch
+        GIT_BRANCH   = "main"
 
         SONAR_URL    = "http://localhost:9000"
         SONAR_TOKEN  = "squ_5426936d009fed14309c280c0f21429e256cafbd"
+
+        NEXUS_URL    = "http://localhost:8081"
+        DOCKER_IMAGE = "nejimissaoui/achat-devops:latest"
     }
 
     stages {
@@ -24,8 +25,8 @@ pipeline {
         stage('2. Maven Clean & Compile') {
             steps {
                 bat """
-                    set "JAVA_HOME=${JDK17_HOME}"
-                    set "PATH=${JDK17_HOME}\\bin;%PATH%"
+                    set "JAVA_HOME=${JDK_HOME}"
+                    set "PATH=${JDK_HOME}\\bin;%PATH%"
                     mvn clean compile
                 """
             }
@@ -34,20 +35,28 @@ pipeline {
         stage('3. Unit Tests & JaCoCo') {
             steps {
                 bat """
-                    set "JAVA_HOME=${JDK17_HOME}"
-                    set "PATH=${JDK17_HOME}\\bin;%PATH%"
+                    set "JAVA_HOME=${JDK_HOME}"
+                    set "PATH=${JDK_HOME}\\bin;%PATH%"
                     mvn test
                 """
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                }
             }
         }
 
         stage('4. SonarQube Analysis') {
             steps {
-                // SonarQube 26.10 scanner requires Java 21+ (uses your JDK 25)
                 bat """
-                    set "JAVA_HOME=${JDK25_HOME}"
-                    set "PATH=${JDK25_HOME}\\bin;%PATH%"
-                    mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar -Dsonar.host.url=${SONAR_URL} -Dsonar.token=${SONAR_TOKEN}
+                    set "JAVA_HOME=${JDK_HOME}"
+                    set "PATH=${JDK_HOME}\\bin;%PATH%"
+                    mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar ^
+                        -Dsonar.host.url=${SONAR_URL} ^
+                        -Dsonar.token=${SONAR_TOKEN} ^
+                        -Dsonar.java.coveragePlugin=jacoco ^
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                 """
             }
         }
@@ -55,17 +64,35 @@ pipeline {
         stage('5. Package JAR') {
             steps {
                 bat """
-                    set "JAVA_HOME=${JDK17_HOME}"
-                    set "PATH=${JDK17_HOME}\\bin;%PATH%"
+                    set "JAVA_HOME=${JDK_HOME}"
+                    set "PATH=${JDK_HOME}\\bin;%PATH%"
                     mvn package -DskipTests
                 """
+            }
+        }
+
+        stage('6. Deploy to Nexus') {
+            steps {
+                bat """
+                    set "JAVA_HOME=${JDK_HOME}"
+                    set "PATH=${JDK_HOME}\\bin;%PATH%"
+                    mvn deploy -DskipTests
+                """
+            }
+        }
+
+        stage('7. Docker Build') {
+            steps {
+                bat "docker build -t ${DOCKER_IMAGE} ."
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline completed! Check your dashboard at http://localhost:9000"
+            echo "Pipeline completed successfully!"
+            echo "SonarQube: http://localhost:9000"
+            echo "Nexus: http://localhost:8081"
         }
         failure {
             echo "Pipeline failed. Check the stage logs in Console Output."
