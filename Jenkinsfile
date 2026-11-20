@@ -66,8 +66,8 @@ tools {
         stage('DEPLOY OUR IMAGE') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
-                    bat "docker push %DOCKER_IMAGE%"
+                    bat 'docker login -u "%DOCKER_USER%" -p "%DOCKER_PASS%"'
+                    bat 'docker push %DOCKER_IMAGE%'
                     bat 'docker logout'
                 }
             }
