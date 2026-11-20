@@ -12,7 +12,7 @@ pipeline {
         SONAR_TOKEN  = "squ_34b303ac2a595be9b3162eba30610c84f37ef89d"
 
         NEXUS_URL    = "http://localhost:8081"
-        DOCKER_IMAGE = "nejimissaoui/achat-devops:latest"
+        DOCKER_IMAGE = "khalilbouhlel1/achat-devops:latest"
     }
 
     stages {

@@ -1,6 +1,6 @@
 services:
   app-achat:
-    image: nejimissaoui/achat-devops:latest
+    image: khalilbouhlel1/achat-devops:latest
     container_name: achat-container
     ports:
       - "8089:8089"
