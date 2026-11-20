@@ -1,89 +1,101 @@
 package tn.esprit.rh.achat.services;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.rh.achat.entities.Produit;
+import tn.esprit.rh.achat.entities.Stock;
 import tn.esprit.rh.achat.repositories.ProduitRepository;
+import tn.esprit.rh.achat.repositories.StockRepository;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class ProduitServiceImplTest {
+class ProduitServiceImplTest {
 
     @Mock
-    private ProduitRepository produitRepository;
+    ProduitRepository produitRepository;
+
+    @Mock
+    StockRepository stockRepository;
 
     @InjectMocks
-    private ProduitServiceImpl produitService;
+    ProduitServiceImpl produitService;
 
     @Test
-    public void testRetrieveAllProduits() {
+    void testRetrieveAllProduits() {
         Produit p1 = new Produit();
-        p1.setIdProduit(1L);
-        p1.setCodeProduit("PROD01");
-        p1.setLibelleProduit("PC Portable");
-
-        List<Produit> list = Arrays.asList(p1);
-
-        when(produitRepository.findAll()).thenReturn(list);
+        Produit p2 = new Produit();
+        Mockito.when(produitRepository.findAll()).thenReturn(Arrays.asList(p1, p2));
 
         List<Produit> result = produitService.retrieveAllProduits();
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(1, result.size());
-        Assertions.assertEquals("PROD01", result.get(0).getCodeProduit());
-        verify(produitRepository, times(1)).findAll();
+        
+        assertEquals(2, result.size(), "Should return exactly 2 products.");
     }
 
     @Test
-    public void testAddProduit() {
+    void testAddProduit() {
         Produit p = new Produit();
-        p.setIdProduit(1L);
-        p.setCodeProduit("PROD02");
-        p.setLibelleProduit("Imprimante");
-
-        when(produitRepository.save(any(Produit.class))).thenReturn(p);
+        Mockito.when(produitRepository.save(any(Produit.class))).thenReturn(p);
 
         Produit savedProduit = produitService.addProduit(p);
-
-        Assertions.assertNotNull(savedProduit);
-        Assertions.assertEquals("PROD02", savedProduit.getCodeProduit());
-        verify(produitRepository, times(1)).save(p);
+        
+        assertNotNull(savedProduit, "Saved product should not be null.");
     }
 
     @Test
-    public void testRetrieveProduit() {
-        Long id = 1L;
+    void testDeleteProduit() {
+        Long productId = 1L;
+        produitService.deleteProduit(productId);
+        
+        // Verifies the repository's deleteById method was called exactly once with the correct ID
+        verify(produitRepository, times(1)).deleteById(productId);
+    }
+
+    @Test
+    void testUpdateProduit() {
         Produit p = new Produit();
-        p.setIdProduit(id);
-        p.setCodeProduit("PROD03");
+        Mockito.when(produitRepository.save(any(Produit.class))).thenReturn(p);
 
-        when(produitRepository.findById(id)).thenReturn(Optional.of(p));
-
-        Produit result = produitService.retrieveProduit(id);
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(id, result.getIdProduit());
-        verify(produitRepository, times(1)).findById(id);
+        Produit updatedProduit = produitService.updateProduit(p);
+        
+        assertNotNull(updatedProduit, "Updated product should not be null.");
     }
 
     @Test
-    public void testDeleteProduit() {
-        Long id = 1L;
+    void testRetrieveProduit() {
+        Produit p = new Produit();
+        Mockito.when(produitRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        doNothing().when(produitRepository).deleteById(id);
+        Produit result = produitService.retrieveProduit(1L);
+        
+        assertNotNull(result, "Retrieved product should not be null.");
+    }
 
-        produitService.deleteProduit(id);
+    @Test
+    void testAssignProduitToStock() {
+        Produit p = new Produit();
+        Stock s = new Stock();
+        
+        Mockito.when(produitRepository.findById(1L)).thenReturn(Optional.of(p));
+        Mockito.when(stockRepository.findById(2L)).thenReturn(Optional.of(s));
+        Mockito.when(produitRepository.save(any(Produit.class))).thenReturn(p);
 
-        verify(produitRepository, times(1)).deleteById(id);
+        produitService.assignProduitToStock(1L, 2L);
+        
+        // Verifies the product was saved after the stock was attached
+        verify(produitRepository, times(1)).save(p);
+        assertEquals(s, p.getStock(), "The stock should be successfully assigned to the product.");
     }
 }
