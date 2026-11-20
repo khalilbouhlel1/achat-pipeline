@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "neji/achat-app"
+        IMAGE_NAME = "nejimissaoui/achat-app"
         IMAGE_TAG  = "latest"
     }
 
@@ -51,8 +51,10 @@ pipeline {
 
         stage('DEPLOY OUR IMAGE') {
             steps {
-                bat "docker login -u USERNAME_DOCKERHUB -p PASSWORD_DOCKERHUB"
-                bat "docker push %IMAGE_NAME%:%IMAGE_TAG%"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
+                    bat 'docker push %IMAGE_NAME%:%IMAGE_TAG%'
+                }
             }
         }
     }
