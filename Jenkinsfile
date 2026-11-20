@@ -33,12 +33,12 @@ tools {
         }
 
         stage('MVN SONARQUBE') {
-            steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
-                }
-            }
-        }
+         steps {
+             withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                 bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java"
+             }
+         }
+     }
 
         stage('PUBLISH TO NEXUS') {
             steps {
