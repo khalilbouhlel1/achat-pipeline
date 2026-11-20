@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+tools {
+        maven 'M3'
+    }
     environment {
         DOCKER_IMAGE = "loo9a/achat:1.0-SNAPSHOT"
     }
