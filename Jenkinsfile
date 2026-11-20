@@ -10,7 +10,7 @@ pipeline {
         SONAR_TOKEN    = "sqa_e3f8c0f7f3ece10b132f0bc286174a71d58b3ce7"
 
         MAVEN_SETTINGS = "C:\\Users\\Lotfi\\.m2\\settings.xml"
-        IMAGE_NAME     = "lotfi371/achat-app"
+        IMAGE_NAME     = "lotfii1/achat-app"
         IMAGE_TAG      = "dev-lotfi"
         CONTAINER_NAME = "achat-app-container"
     }
