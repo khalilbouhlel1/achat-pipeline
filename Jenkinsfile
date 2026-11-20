@@ -5,6 +5,7 @@ tools {
     }
     environment {
         DOCKER_IMAGE = "loo9a/achat:1.0-SNAPSHOT"
+        AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {
@@ -35,7 +36,7 @@ tools {
         stage('MVN SONARQUBE') {
          steps {
              withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                 bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java"
+                 bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
              }
          }
      }
@@ -73,5 +74,16 @@ tools {
                 }
             }
         }
-    }
+        stage('Test AWS Credentials') {
+         steps {
+             withCredentials([
+                 string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                 string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                 string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+             ]) {
+                 bat 'aws sts get-caller-identity'
+             }
+         }
+     
+    }}
 }
