@@ -100,5 +100,31 @@ tools {
                 }
             }
         }
+        stage('UPDATE KUBECONFIG') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'aws eks update-kubeconfig --region us-east-1 --name achat-cluster'
+                }
+            }
+        }
+
+        stage('DEPLOY TO AWS KUBERNETES') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'kubectl apply -f k8s/deployment.yaml'
+                    bat 'kubectl rollout restart deployment/achat-app'
+                    bat 'kubectl get pods'
+                    bat 'kubectl get svc achat-service'
+                }
+            }
+        }
         }
 }
