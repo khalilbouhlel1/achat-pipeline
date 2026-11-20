@@ -33,7 +33,7 @@ pipeline {
 
         stage('MVN SONARQUBE') {
             steps {
-                bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=TOKEN_SONARQUBE_MTA3EK'
+                bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=sqa_0a08791e0ac011ca4e6e95f4c5fae289b821ed64'
             }
         }
 
