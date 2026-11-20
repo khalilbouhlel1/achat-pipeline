@@ -99,4 +99,19 @@ public class CategorieProduitServiceImplTest {
         Assertions.assertEquals("CAT-MODIF", updated.getCodeCategorie());
         verify(categorieProduitRepository, times(1)).save(cp);
     }
+
+    @Test
+    public void testRetrieveAllCategorieProduct() {
+        CategorieProduit cp = new CategorieProduit();
+        cp.setIdCategorieProduit(1L);
+        List<CategorieProduit> list = Arrays.asList(cp);
+
+        when(categorieProduitRepository.findAll()).thenReturn(list);
+
+        Object result = categorieProduitService.retrieveAllCategorieProduct();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(list, result);
+        verify(categorieProduitRepository, times(1)).findAll();
+    }
 }

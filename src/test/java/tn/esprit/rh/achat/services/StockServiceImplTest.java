@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.rh.achat.entities.Stock;
 import tn.esprit.rh.achat.repositories.StockRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -102,5 +103,37 @@ public class StockServiceImplTest {
         Assertions.assertNotNull(updatedStock);
         Assertions.assertEquals("Stock Modifié", updatedStock.getLibelleStock());
         verify(stockRepository, times(1)).save(s);
+    }
+
+    @Test
+    public void testRetrieveStatusStockWithAlerts() {
+        Stock s = new Stock("Stock Danger", 2, 10);
+        when(stockRepository.retrieveStatusStock()).thenReturn(Arrays.asList(s));
+
+        String status = stockService.retrieveStatusStock();
+
+        Assertions.assertNotNull(status);
+        Assertions.assertTrue(status.contains("Stock Danger"));
+        Assertions.assertTrue(status.contains("inférieur à la quantité minimale"));
+        verify(stockRepository, times(1)).retrieveStatusStock();
+    }
+
+    @Test
+    public void testRetrieveStatusStockEmpty() {
+        when(stockRepository.retrieveStatusStock()).thenReturn(new ArrayList<>());
+
+        String status = stockService.retrieveStatusStock();
+
+        Assertions.assertNotNull(status);
+        Assertions.assertEquals("", status);
+        verify(stockRepository, times(1)).retrieveStatusStock();
+    }
+
+    @Test
+    public void testStockConstructorAndProperties() {
+        Stock s = new Stock("Stock Test", 20, 5);
+        Assertions.assertEquals("Stock Test", s.getLibelleStock());
+        Assertions.assertEquals(20, s.getQte());
+        Assertions.assertEquals(5, s.getQteMin());
     }
 }

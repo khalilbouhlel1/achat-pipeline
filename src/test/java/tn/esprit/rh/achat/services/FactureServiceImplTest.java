@@ -5,28 +5,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tn.esprit.rh.achat.entities.Facture;
-import tn.esprit.rh.achat.entities.Fournisseur;
-import tn.esprit.rh.achat.entities.Operateur;
-import tn.esprit.rh.achat.repositories.FactureRepository;
-import tn.esprit.rh.achat.repositories.FournisseurRepository;
-import tn.esprit.rh.achat.repositories.OperateurRepository;
+import tn.esprit.rh.achat.entities.*;
+import tn.esprit.rh.achat.repositories.*;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FactureServiceImplTest {
@@ -38,7 +24,13 @@ class FactureServiceImplTest {
     OperateurRepository operateurRepository;
 
     @Mock
+    DetailFactureRepository detailFactureRepository;
+
+    @Mock
     FournisseurRepository fournisseurRepository;
+
+    @Mock
+    ProduitRepository produitRepository;
 
     @Mock
     ReglementServiceImpl reglementService;
@@ -54,6 +46,34 @@ class FactureServiceImplTest {
         Facture result = factureService.addFacture(f);
 
         assertNotNull(result);
+        verify(factureRepository, times(1)).save(f);
+    }
+
+    @Test
+    void testAddFactureWithDetails() {
+        Facture f = new Facture();
+        DetailFacture df = new DetailFacture();
+        df.setQteCommandee(2);
+        df.setPourcentageRemise(10);
+
+        Produit p = new Produit();
+        p.setIdProduit(1L);
+        p.setPrix(100.0f);
+        df.setProduit(p);
+
+        Set<DetailFacture> details = new HashSet<>();
+        details.add(df);
+        f.setDetailsFacture(details);
+
+        when(produitRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(factureRepository.save(any(Facture.class))).thenReturn(f);
+
+        Facture result = factureService.addFacture(f);
+
+        assertNotNull(result);
+        assertEquals(180.0f, result.getMontantFacture());
+        assertEquals(20.0f, result.getMontantRemise());
+        verify(detailFactureRepository, times(1)).save(df);
         verify(factureRepository, times(1)).save(f);
     }
 
@@ -107,15 +127,44 @@ class FactureServiceImplTest {
     }
 
     @Test
+    void testCancelFactureNotFound() {
+        when(factureRepository.findById(1L)).thenReturn(Optional.empty());
+
+        factureService.cancelFacture(1L);
+
+        verify(factureRepository, times(1)).findById(1L);
+        verify(factureRepository, never()).save(any());
+        verify(factureRepository, times(1)).updateFacture(1L);
+    }
+
+    @Test
     void testGetFacturesByFournisseur() {
         Fournisseur fournisseur = new Fournisseur();
         fournisseur.setIdFournisseur(1L);
-        fournisseur.setFactures(new HashSet<>());
+        Facture f = new Facture();
+        f.setIdFacture(10L);
+        Set<Facture> factures = new HashSet<>();
+        factures.add(f);
+        fournisseur.setFactures(factures);
 
         when(fournisseurRepository.findById(1L)).thenReturn(Optional.of(fournisseur));
 
-        assertThrows(ClassCastException.class, () -> factureService.getFacturesByFournisseur(1L));
+        List<Facture> result = factureService.getFacturesByFournisseur(1L);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(10L, result.get(0).getIdFacture());
         verify(fournisseurRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testGetFacturesByFournisseurNotFound() {
+        when(fournisseurRepository.findById(2L)).thenReturn(Optional.empty());
+
+        List<Facture> result = factureService.getFacturesByFournisseur(2L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -135,6 +184,36 @@ class FactureServiceImplTest {
 
         assertEquals(1, operateur.getFactures().size());
         verify(operateurRepository, times(1)).save(operateur);
+    }
+
+    @Test
+    void testAssignOperateurToFactureWithNullSet() {
+        Facture facture = new Facture();
+        facture.setIdFacture(10L);
+
+        Operateur operateur = new Operateur();
+        operateur.setIdOperateur(2L);
+        operateur.setFactures(null);
+
+        when(factureRepository.findById(10L)).thenReturn(Optional.of(facture));
+        when(operateurRepository.findById(2L)).thenReturn(Optional.of(operateur));
+        when(operateurRepository.save(any(Operateur.class))).thenReturn(operateur);
+
+        factureService.assignOperateurToFacture(2L, 10L);
+
+        assertNotNull(operateur.getFactures());
+        assertEquals(1, operateur.getFactures().size());
+        verify(operateurRepository, times(1)).save(operateur);
+    }
+
+    @Test
+    void testAssignOperateurToFactureNotFound() {
+        when(factureRepository.findById(10L)).thenReturn(Optional.empty());
+        when(operateurRepository.findById(2L)).thenReturn(Optional.empty());
+
+        factureService.assignOperateurToFacture(2L, 10L);
+
+        verify(operateurRepository, never()).save(any());
     }
 
     @Test

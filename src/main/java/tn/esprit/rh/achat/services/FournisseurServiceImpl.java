@@ -31,7 +31,7 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	public List<Fournisseur> retrieveAllFournisseurs() {
 		List<Fournisseur> fournisseurs = (List<Fournisseur>) fournisseurRepository.findAll();
 		for (Fournisseur fournisseur : fournisseurs) {
-			log.info(" fournisseur : " + fournisseur);
+			log.info(" fournisseur : {}", fournisseur);
 		}
 		return fournisseurs;
 	}
@@ -48,7 +48,9 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	
 	private DetailFournisseur  saveDetailFournisseur(Fournisseur f){
 		DetailFournisseur df = f.getDetailFournisseur();
-		detailFournisseurRepository.save(df);
+		if (df != null) {
+			detailFournisseurRepository.save(df);
+		}
 		return df;
 	}
 
@@ -76,10 +78,13 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	public void assignSecteurActiviteToFournisseur(Long idSecteurActivite, Long idFournisseur) {
 		Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
 		SecteurActivite secteurActivite = secteurActiviteRepository.findById(idSecteurActivite).orElse(null);
-        fournisseur.getSecteurActivites().add(secteurActivite);
-        fournisseurRepository.save(fournisseur);
-		
-		
+		if (fournisseur != null && secteurActivite != null) {
+			if (fournisseur.getSecteurActivites() == null) {
+				fournisseur.setSecteurActivites(new java.util.HashSet<>());
+			}
+			fournisseur.getSecteurActivites().add(secteurActivite);
+			fournisseurRepository.save(fournisseur);
+		}
 	}
 
 	

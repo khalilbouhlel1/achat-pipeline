@@ -31,7 +31,9 @@ public class SpringFoxSwaggerConfig {
 				.apis(RequestHandlerSelectors.basePackage("tn.esprit.rh.achat"))
 				.paths(PathSelectors.any())
 				.build()
-				.apiInfo(apiInfo()); // <-- Corrigé pour correspondre au nom de la méthode ci-dessous
+				.securityContexts(Collections.singletonList(securityContext()))
+				.securitySchemes(Collections.singletonList(apiKey()))
+				.apiInfo(apiInfo());
 	}
 
 	private ApiInfo apiInfo() { // <-- Renommé d'apiEndPointsInfo à apiInfo

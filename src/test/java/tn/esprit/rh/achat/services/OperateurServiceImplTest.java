@@ -1,7 +1,6 @@
 package tn.esprit.rh.achat.services;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -57,6 +56,19 @@ public class OperateurServiceImplTest {
     }
 
     @Test
+    public void testUpdateOperateur() {
+        Operateur op = new Operateur(1L, "Ali", "Ben Salah", "pwd123", null);
+
+        when(operateurRepository.save(any(Operateur.class))).thenReturn(op);
+
+        Operateur updatedOp = operateurService.updateOperateur(op);
+
+        assertNotNull(updatedOp);
+        assertEquals("Ali", updatedOp.getNom());
+        verify(operateurRepository, times(1)).save(op);
+    }
+
+    @Test
     public void testRetrieveOperateur() {
         Operateur op = new Operateur(1L, "Ali", "Ben Salah", "pwd123", null);
 
@@ -67,6 +79,15 @@ public class OperateurServiceImplTest {
         assertNotNull(result);
         assertEquals(1L, result.getIdOperateur());
         assertEquals("Ali", result.getNom());
+    }
+
+    @Test
+    public void testRetrieveOperateurNotFound() {
+        when(operateurRepository.findById(99L)).thenReturn(Optional.empty());
+
+        Operateur result = operateurService.retrieveOperateur(99L);
+
+        assertNull(result);
     }
 
     @Test
