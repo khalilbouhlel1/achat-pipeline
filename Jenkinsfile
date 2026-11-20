@@ -9,7 +9,7 @@ pipeline {
         GIT_BRANCH   = "main"
 
         SONAR_URL    = "http://localhost:9000"
-        SONAR_TOKEN  = "squ_5426936d009fed14309c280c0f21429e256cafbd"
+        SONAR_TOKEN  = "squ_34b303ac2a595be9b3162eba30610c84f37ef89d"
 
         NEXUS_URL    = "http://localhost:8081"
         DOCKER_IMAGE = "nejimissaoui/achat-devops:latest"
