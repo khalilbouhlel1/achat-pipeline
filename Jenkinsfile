@@ -1,11 +1,11 @@
-pipeline {
+﻿pipeline {
     agent any
 
     environment {
         IMAGE_NAME         = "nejimissaoui/achat-app"
         IMAGE_TAG          = "latest"
         AWS_DEFAULT_REGION = "us-east-1"
-        EKS_CLUSTER_NAME   = "<NOM_CLUSTER_EKS>"
+        EKS_CLUSTER_NAME   = "achat-eks-cluster"
         TERRAFORM_DIR      = "terraform"
         K8S_DIR            = "k8s"
     }
@@ -57,7 +57,9 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-                    bat 'docker push %IMAGE_NAME%:%IMAGE_TAG%'
+                    retry(3) {
+                        bat 'docker push %IMAGE_NAME%:%IMAGE_TAG%'
+                    }
                 }
             }
         }

@@ -1,0 +1,22 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: achat-app
+  labels:
+    app: achat-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: achat-app
+  template:
+    metadata:
+      labels:
+        app: achat-app
+    spec:
+      containers:
+        - name: achat-app
+          image: nejimissaoui/achat-app:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
