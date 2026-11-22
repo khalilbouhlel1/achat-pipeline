@@ -1,4 +1,4 @@
-﻿pipeline {
+pipeline {
     agent any
 
     environment {
@@ -84,7 +84,7 @@
                     string(credentialsId: 'aws_session_token', variable: 'AWS_SESSION_TOKEN')
                 ]) {
                     bat """
-                        cd %TERRAFORM_DIR%
+                        cd /d %TERRAFORM_DIR%
                         terraform init
                         terraform plan -out=tfplan
                         terraform apply -auto-approve tfplan
@@ -107,12 +107,18 @@
 
         stage('DEPLOY TO AWS KUBERNETES') {
             steps {
-                bat """
-                    cd %K8S_DIR%
-                    kubectl apply -f .
-                    kubectl get pods
-                    kubectl get svc
-                """
+                withCredentials([
+                    string(credentialsId: 'aws_access_key_id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws_session_token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat """
+                        cd /d %K8S_DIR%
+                        kubectl apply -f .
+                        kubectl get pods
+                        kubectl get svc
+                    """
+                }
             }
         }
     }
