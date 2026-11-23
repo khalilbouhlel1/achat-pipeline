@@ -1,4 +1,3 @@
-@'
 terraform {
   required_providers {
     aws = {
@@ -55,4 +54,3 @@ resource "aws_eks_node_group" "achat_nodes" {
 
   depends_on = [aws_eks_cluster.achat_eks]
 }
-'@ | Set-Content -Path terraform\main.tf -Encoding UTF8
