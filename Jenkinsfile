@@ -16,6 +16,8 @@ pipeline {
 
         AWS_DEFAULT_REGION = "us-east-1"
         EKS_CLUSTER_NAME   = "achat-eks-cluster"
+
+        PATH               = "C:\\Program Files\\Amazon\\AWSCLIV2;C:\\Users\\Lotfi\\AppData\\Local\\Microsoft\\WinGet\\Links;${env.PATH}"
     }
 
     stages {
