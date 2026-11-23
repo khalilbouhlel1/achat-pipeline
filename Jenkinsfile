@@ -2,17 +2,20 @@ pipeline {
     agent any
 
     environment {
-        JDK25_HOME     = "C:\\Program Files\\Java\\jdk-25.0.4"
-        GIT_REPO_URL   = "https://github.com/khalilbouhlel1/achat-pipeline.git"
-        GIT_BRANCH     = "dev-lotfi"
+        JDK25_HOME         = "C:\\Program Files\\Java\\jdk-25.0.4"
+        GIT_REPO_URL       = "https://github.com/khalilbouhlel1/achat-pipeline.git"
+        GIT_BRANCH         = "dev-lotfi"
 
-        SONAR_URL      = "http://localhost:9000"
-        SONAR_TOKEN    = "sqa_e3f8c0f7f3ece10b132f0bc286174a71d58b3ce7"
+        SONAR_URL          = "http://localhost:9000"
+        SONAR_TOKEN        = "sqa_e3f8c0f7f3ece10b132f0bc286174a71d58b3ce7"
 
-        MAVEN_SETTINGS = "C:\\Users\\Lotfi\\.m2\\settings.xml"
-        IMAGE_NAME     = "lotfii1/achat-app"
-        IMAGE_TAG      = "dev-lotfi"
-        CONTAINER_NAME = "achat-app-container"
+        MAVEN_SETTINGS     = "C:\\Users\\Lotfi\\.m2\\settings.xml"
+        IMAGE_NAME         = "lotfii1/achat-app"
+        IMAGE_TAG          = "dev-lotfi"
+        CONTAINER_NAME     = "achat-app-container"
+
+        AWS_DEFAULT_REGION = "us-east-1"
+        EKS_CLUSTER_NAME   = "achat-eks-cluster"
     }
 
     stages {
@@ -77,6 +80,7 @@ pipeline {
                 bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
+
         stage('7.5. Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
@@ -91,17 +95,66 @@ pipeline {
         stage('8. Deploy Our Image') {
             steps {
                 bat """
-                    docker network create achat-net 2>nul || exit /b 0
-                    docker rm -f ${CONTAINER_NAME} 2>nul || exit /b 0
+                    docker network create achat-net 2>nul || ver >nul
+                    docker rm -f ${CONTAINER_NAME} 2>nul || ver >nul
                     docker run -d --name ${CONTAINER_NAME} --network achat-net -p 8089:8089 -e SPRING_DATASOURCE_URL="jdbc:mysql://achat-mysql:3306/achat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=root ${IMAGE_NAME}:${IMAGE_TAG}
                 """
+            }
+        }
+
+        stage('Test AWS Credentials') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'aws-creds-file', variable: 'AWS_SHARED_CREDENTIALS_FILE')
+                ]) {
+                    bat 'aws sts get-caller-identity'
+                }
+            }
+        }
+
+        stage('SETUP TERRAFORM') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'aws-creds-file', variable: 'AWS_SHARED_CREDENTIALS_FILE')
+                ]) {
+                    dir('terraform') {
+                        bat '''
+                            terraform init
+                            terraform apply -auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('UPDATE KUBECONFIG') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'aws-creds-file', variable: 'AWS_SHARED_CREDENTIALS_FILE')
+                ]) {
+                    bat "aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME}"
+                }
+            }
+        }
+
+        stage('DEPLOY TO AWS KUBERNETES') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'aws-creds-file', variable: 'AWS_SHARED_CREDENTIALS_FILE')
+                ]) {
+                    bat '''
+                        kubectl apply -f k8s/
+                        kubectl get pods
+                        kubectl get svc
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline complet reussi : SonarQube, Nexus, Docker Build et Deploy !"
+            echo "Pipeline complet reussi : SonarQube, Nexus, Docker, Terraform et AWS EKS !"
         }
         failure {
             echo "Le pipeline a echoue. Verifie les logs dans Console Output."
