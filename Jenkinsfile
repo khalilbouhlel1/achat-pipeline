@@ -4,14 +4,14 @@ tools {
         maven 'apache-maven-3.10.0'
     }
     environment {
-        DOCKER_IMAGE = "loo9a/achat:1.0-SNAPSHOT"
+        DOCKER_IMAGE = "khalilbouhlel1/achat:1.0-SNAPSHOT"
         AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {
         stage('CHECKOUT GIT') {
             steps {
-                git branch: 'dev-farouk', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
+                git branch: 'main', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
             }
         }
 
