@@ -74,19 +74,24 @@ pipeline {
                 }
             }
         }
+
+        // =========================================================================
+        // AWS Deployment Stages (Skipped until AWS credentials are provided)
+        // =========================================================================
+        /*
         stage('Test AWS Credentials') {
-         steps {
-             withCredentials([
-                 string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                 string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                 string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-             ]) {
-                 bat 'aws sts get-caller-identity'
-             }
-         }
-     
-    }
-    stage('SETUP TERRAFORM') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'aws sts get-caller-identity'
+                }
+            }
+        }
+
+        stage('SETUP TERRAFORM') {
             steps {
                 withCredentials([
                     string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
@@ -100,6 +105,7 @@ pipeline {
                 }
             }
         }
+
         stage('UPDATE KUBECONFIG') {
             steps {
                 withCredentials([
@@ -126,5 +132,6 @@ pipeline {
                 }
             }
         }
+        */
         }
 }
