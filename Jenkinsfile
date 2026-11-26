@@ -127,7 +127,7 @@ pipeline {
     post {
         success {
             emailext(
-                to: 'missaouineji783@gmail.com',
+                to: "${env.MAIL_TO}",
                 subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} (dev-neji)",
                 body: """Bonjour,
 
@@ -138,7 +138,7 @@ Détails : ${env.BUILD_URL}"""
         }
         failure {
             emailext(
-                to: "${env.MAIL_TO}",
+                to: 'missaoui.nejii@gmail.com',
                 subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} (dev-neji)",
                 body: """Bonjour,
 
