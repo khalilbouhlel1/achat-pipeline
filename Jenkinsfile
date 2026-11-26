@@ -138,7 +138,7 @@ Détails : ${env.BUILD_URL}"""
         }
         failure {
             emailext(
-                to: 'missaoui.nejii@gmail.com',
+                to: 'neji.missaouii@gmail.com',
                 subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} (dev-neji)",
                 body: """Bonjour,
 
