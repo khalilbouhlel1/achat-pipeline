@@ -8,7 +8,7 @@ pipeline {
         EKS_CLUSTER_NAME   = "achat-eks-cluster"
         TERRAFORM_DIR      = "terraform"
         K8S_DIR            = "k8s"
-        MAIL_TO            = "ton.email@exemple.com"
+        MAIL_TO            = "neji.missaouii@gmail.com"
     }
 
     stages {
@@ -126,8 +126,8 @@ pipeline {
 
     post {
         success {
-            emailext(
-                to: "${env.MAIL_TO}",
+            mail(
+                to: 'neji.missaouii@gmail.com',
                 subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} (dev-neji)",
                 body: """Bonjour,
 
@@ -137,7 +137,7 @@ Détails : ${env.BUILD_URL}"""
             )
         }
         failure {
-            emailext(
+            mail(
                 to: 'neji.missaouii@gmail.com',
                 subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} (dev-neji)",
                 body: """Bonjour,
