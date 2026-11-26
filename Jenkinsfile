@@ -6,6 +6,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "khalilbouhlel/achat:1.0-SNAPSHOT"
         AWS_DEFAULT_REGION = "us-east-1"
+        PATH = "C:\\Program Files\\Amazon\\AWSCLIV2;${env.PATH}"
     }
 
     stages {
@@ -34,12 +35,12 @@ pipeline {
         }
 
         stage('MVN SONARQUBE') {
-         steps {
-             withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                 bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
-             }
-         }
-     }
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
+                }
+            }
+        }
 
         stage('PUBLISH TO NEXUS') {
             steps {
@@ -75,14 +76,9 @@ pipeline {
             }
         }
 
-        
         stage('Test AWS Credentials') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-                ]) {
+                withAwsSession {
                     bat 'aws sts get-caller-identity'
                 }
             }
@@ -90,11 +86,7 @@ pipeline {
 
         stage('SETUP TERRAFORM') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-                ]) {
+                withAwsSession {
                     dir('terraform') {
                         bat 'terraform init'
                         bat 'terraform apply -auto-approve'
@@ -105,11 +97,7 @@ pipeline {
 
         stage('UPDATE KUBECONFIG') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-                ]) {
+                withAwsSession {
                     bat 'aws eks update-kubeconfig --region us-east-1 --name achat-cluster'
                 }
             }
@@ -117,11 +105,7 @@ pipeline {
 
         stage('DEPLOY TO AWS KUBERNETES') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-                ]) {
+                withAwsSession {
                     bat 'kubectl apply -f k8s/deployment.yaml'
                     bat 'kubectl rollout restart deployment/achat-app'
                     bat 'kubectl get pods'
@@ -129,5 +113,15 @@ pipeline {
                 }
             }
         }
-        }
+    }
+}
+
+void withAwsSession(Closure body) {
+    withCredentials([
+        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+        string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+    ]) {
+        body()
+    }
 }
