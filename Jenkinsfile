@@ -155,15 +155,8 @@ pipeline {
     }
 
     post {
-        success {
-            echo "Pipeline complet reussi : SonarQube, Nexus, Docker, Terraform et AWS EKS !"
-        }
-        failure {
-            echo "Le pipeline a echoue. Verifie les logs dans Console Output."
-        }
-    }
-    post {
         always {
+            // Tes éventuelles actions existantes ici (ex: echo, cleanWs...)
             emailext(
                 to: 'lotfimz456@gmail.com',
                 subject: "Jenkins Pipeline [${currentBuild.currentResult}] - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
@@ -178,6 +171,12 @@ pipeline {
                 attachLog: true,
                 compressLog: false
             )
+        }
+        success {
+            echo 'Pipeline réussi !'
+        }
+        failure {
+            echo 'Pipeline échoué !'
         }
     }
 }
