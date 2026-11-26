@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
 
   app-achat:
+    build: .
     image: khalilbouhlel/achat:1.0-SNAPSHOT
     container_name: achat-container
     ports:

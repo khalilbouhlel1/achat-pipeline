@@ -7,6 +7,6 @@ scrape_configs:
     metrics_path: '/SpringMVC/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: ['app-achat:8089', 'host.docker.internal:8089']
+      - targets: ['app-achat:8089']
         labels:
           application: 'achat-application'
