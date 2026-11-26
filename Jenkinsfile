@@ -162,4 +162,22 @@ pipeline {
             echo "Le pipeline a echoue. Verifie les logs dans Console Output."
         }
     }
+    post {
+        always {
+            emailext(
+                to: 'lotfimz456@gmail.com',
+                subject: "Jenkins Pipeline [${currentBuild.currentResult}] - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    <p><b>Job:</b> ${env.JOB_NAME}</p>
+                    <p><b>Build Number:</b> #${env.BUILD_NUMBER}</p>
+                    <p><b>Status:</b> ${currentBuild.currentResult}</p>
+                    <p><b>Console Output:</b> <a href="${env.BUILD_URL}console">${env.BUILD_URL}console</a></p>
+                    <p>The full pipeline log is attached to this email.</p>
+                """,
+                mimeType: 'text/html',
+                attachLog: true,
+                compressLog: false
+            )
+        }
+    }
 }
