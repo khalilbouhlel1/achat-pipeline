@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.rh.achat.entities.Produit;
 import tn.esprit.rh.achat.entities.Stock;
-import tn.esprit.rh.achat.repositories.CategorieProduitRepository;
 import tn.esprit.rh.achat.repositories.ProduitRepository;
 import tn.esprit.rh.achat.repositories.StockRepository;
 
@@ -20,25 +19,22 @@ public class ProduitServiceImpl implements IProduitService {
 	ProduitRepository produitRepository;
 	@Autowired
 	StockRepository stockRepository;
-	@Autowired
-	CategorieProduitRepository categorieProduitRepository;
 
 	@Override
 	public List<Produit> retrieveAllProduits() {
 		List<Produit> produits = (List<Produit>) produitRepository.findAll();
 		for (Produit produit : produits) {
-			log.info(" Produit : " + produit);
+			log.info(" Produit : {}", produit);
 		}
 		return produits;
 	}
 
+	@Override
 	@Transactional
 	public Produit addProduit(Produit p) {
 		produitRepository.save(p);
 		return p;
 	}
-
-	
 
 	@Override
 	public void deleteProduit(Long produitId) {
@@ -53,7 +49,7 @@ public class ProduitServiceImpl implements IProduitService {
 	@Override
 	public Produit retrieveProduit(Long produitId) {
 		Produit produit = produitRepository.findById(produitId).orElse(null);
-		log.info("produit :" + produit);
+		log.info("produit : {}", produit);
 		return produit;
 	}
 
@@ -61,10 +57,10 @@ public class ProduitServiceImpl implements IProduitService {
 	public void assignProduitToStock(Long idProduit, Long idStock) {
 		Produit produit = produitRepository.findById(idProduit).orElse(null);
 		Stock stock = stockRepository.findById(idStock).orElse(null);
-		produit.setStock(stock);
-		produitRepository.save(produit);
-
+		if (produit != null) {
+			produit.setStock(stock);
+			produitRepository.save(produit);
+		}
 	}
-
 
 }

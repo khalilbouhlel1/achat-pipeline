@@ -26,36 +26,16 @@ class FactureServiceImplTest {
     FactureRepository factureRepository;
 
     @Mock
-    OperateurRepository operateurRepository;
+    FournisseurRepository fournisseurRepository;
 
     @Mock
-    FournisseurRepository fournisseurRepository;
+    OperateurRepository operateurRepository;
 
     @Mock
     ReglementServiceImpl reglementService;
 
     @InjectMocks
     FactureServiceImpl factureService;
-
-    @Test
-    void testAddFacture() {
-        Facture f = new Facture();
-        Mockito.when(factureRepository.save(any(Facture.class))).thenReturn(f);
-
-        Facture result = factureService.addFacture(f);
-
-        assertNotNull(result, "Saved facture should not be null.");
-    }
-
-    @Test
-    void testRetrieveFacture() {
-        Facture f = new Facture();
-        Mockito.when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
-
-        Facture result = factureService.retrieveFacture(1L);
-
-        assertNotNull(result, "Facture should be retrieved successfully.");
-    }
 
     @Test
     void testRetrieveAllFactures() {
@@ -70,11 +50,44 @@ class FactureServiceImplTest {
     }
 
     @Test
+    void testAddFacture() {
+        Facture f = new Facture();
+        when(factureRepository.save(any(Facture.class))).thenReturn(f);
+
+        Facture result = factureService.addFacture(f);
+
+        assertNotNull(result, "Saved facture should not be null.");
+        verify(factureRepository, times(1)).save(f);
+    }
+
+    @Test
+    void testRetrieveFacture() {
+        Facture f = new Facture();
+        when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
+
+        Facture result = factureService.retrieveFacture(1L);
+
+        assertNotNull(result, "Facture should be retrieved successfully.");
+        verify(factureRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testRetrieveFactureNull() {
+        when(factureRepository.findById(99L)).thenReturn(Optional.empty());
+
+        Facture result = factureService.retrieveFacture(99L);
+
+        assertNull(result);
+    }
+
+    @Test
     void testCancelFacture() {
         Facture f = new Facture();
         f.setIdFacture(1L);
         f.setArchivee(false);
         when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(factureRepository.save(any(Facture.class))).thenReturn(f);
+        doNothing().when(factureRepository).updateFacture(1L);
 
         factureService.cancelFacture(1L);
 
@@ -87,8 +100,9 @@ class FactureServiceImplTest {
     void testGetFacturesByFournisseur() {
         Fournisseur fournisseur = new Fournisseur();
         Facture f = new Facture();
-        Set<Facture> set = new HashSet<>(Collections.singletonList(f));
-        fournisseur.setFactures(set);
+        Set<Facture> factures = new HashSet<>(Collections.singletonList(f));
+        fournisseur.setFactures(factures);
+
         when(fournisseurRepository.findById(1L)).thenReturn(Optional.of(fournisseur));
 
         List<Facture> result = factureService.getFacturesByFournisseur(1L);
@@ -98,31 +112,53 @@ class FactureServiceImplTest {
     }
 
     @Test
-    void testAssignOperateurToFacture() {
-        Facture facture = new Facture();
-        facture.setIdFacture(1L);
-        Operateur operateur = new Operateur();
-        operateur.setIdOperateur(2L);
-        operateur.setFactures(new HashSet<>());
+    void testGetFacturesByFournisseurNotFound() {
+        when(fournisseurRepository.findById(99L)).thenReturn(Optional.empty());
 
-        when(factureRepository.findById(1L)).thenReturn(Optional.of(facture));
-        when(operateurRepository.findById(2L)).thenReturn(Optional.of(operateur));
+        List<Facture> result = factureService.getFacturesByFournisseur(99L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testAssignOperateurToFacture() {
+        Facture f = new Facture();
+        Operateur op = new Operateur();
+        op.setFactures(new HashSet<>());
+
+        when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(operateurRepository.findById(2L)).thenReturn(Optional.of(op));
+        when(operateurRepository.save(any(Operateur.class))).thenReturn(op);
 
         factureService.assignOperateurToFacture(2L, 1L);
 
-        assertTrue(operateur.getFactures().contains(facture));
-        verify(operateurRepository, times(1)).save(operateur);
+        assertTrue(op.getFactures().contains(f));
+        verify(operateurRepository, times(1)).save(op);
     }
 
     @Test
     void testPourcentageRecouvrement() {
         Date start = new Date();
         Date end = new Date();
+
         when(factureRepository.getTotalFacturesEntreDeuxDates(start, end)).thenReturn(1000f);
         when(reglementService.getChiffreAffaireEntreDeuxDate(start, end)).thenReturn(500f);
 
-        float result = factureService.pourcentageRecouvrement(start, end);
+        float pourcentage = factureService.pourcentageRecouvrement(start, end);
 
-        assertEquals(50f, result, 0.001);
+        assertEquals(50f, pourcentage, 0.001f);
+    }
+
+    @Test
+    void testPourcentageRecouvrementZeroTotal() {
+        Date start = new Date();
+        Date end = new Date();
+
+        when(factureRepository.getTotalFacturesEntreDeuxDates(start, end)).thenReturn(0f);
+
+        float pourcentage = factureService.pourcentageRecouvrement(start, end);
+
+        assertEquals(0f, pourcentage, 0.001f);
     }
 }

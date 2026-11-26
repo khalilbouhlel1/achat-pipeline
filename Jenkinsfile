@@ -1,105 +1,132 @@
 pipeline {
     agent any
-
+    tools {
+        maven 'M3'
+    }
     environment {
-        // Installed JDK and Maven on system
-        JDK_HOME       = "C:\\Program Files\\Java\\jdk-21.0.12"
-        MAVEN_HOME     = "C:\\Program Files\\apache-maven-3.10.0"
-        MAVEN_SETTINGS = "C:\\Users\\bouhl\\.m2\\settings.xml"
-
-        GIT_REPO_URL   = "https://github.com/khalilbouhlel1/achat-pipeline.git"
-        GIT_BRANCH     = "dev-khalil"
-
-        SONAR_URL      = "http://localhost:9000"
-        SONAR_TOKEN    = "squ_34b303ac2a595be9b3162eba30610c84f37ef89d"
-
-        NEXUS_URL      = "http://localhost:8081"
-        DOCKER_IMAGE   = "khalilbouhlel1/achat-devops:latest"
+        DOCKER_IMAGE = "loo9a/achat:1.0-SNAPSHOT"
+        AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {
-        stage('1. Git Checkout') {
+        stage('CHECKOUT GIT') {
             steps {
-                git branch: "${GIT_BRANCH}", url: "${GIT_REPO_URL}"
+                git branch: 'dev-khalil', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
             }
         }
 
-        stage('2. Maven Clean & Compile') {
+        stage('MVN CLEAN') {
             steps {
-                bat """
-                    set "JAVA_HOME=${JDK_HOME}"
-                    set "PATH=${MAVEN_HOME}\\bin;${JDK_HOME}\\bin;%PATH%"
-                    mvn clean compile -s "${MAVEN_SETTINGS}"
-                """
+                bat 'mvn clean'
             }
         }
 
-        stage('3. Unit Tests & JaCoCo') {
+        stage('ARTIFACT CONSTRUCTION') {
             steps {
-                bat """
-                    set "JAVA_HOME=${JDK_HOME}"
-                    set "PATH=${MAVEN_HOME}\\bin;${JDK_HOME}\\bin;%PATH%"
-                    mvn test -s "${MAVEN_SETTINGS}"
-                """
+                bat 'mvn package -DskipTests'
             }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+        }
+
+        stage('UNIT TESTS') {
+            steps {
+                bat 'mvn test'
+            }
+        }
+
+        stage('MVN SONARQUBE') {
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
                 }
             }
         }
 
-        stage('4. SonarQube Analysis') {
+        stage('PUBLISH TO NEXUS') {
             steps {
-                bat """
-                    set "JAVA_HOME=${JDK_HOME}"
-                    set "PATH=${MAVEN_HOME}\\bin;${JDK_HOME}\\bin;%PATH%"
-                    mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar ^
-                        -s "${MAVEN_SETTINGS}" ^
-                        -Dsonar.host.url=${SONAR_URL} ^
-                        -Dsonar.token=${SONAR_TOKEN} ^
-                        -Dsonar.java.coveragePlugin=jacoco ^
-                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml ^
-                        -Dsonar.coverage.exclusions="**/entities/**,**/AchatApplication.java,**/OpenApiConfig.java"
-                """
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    writeFile file: 'settings-nexus.xml', text: """<settings>
+                        <servers>
+                            <server>
+                                <id>nexus</id>
+                                <username>${NEXUS_USER}</username>
+                                <password>${NEXUS_PASSWORD}</password>
+                            </server>
+                        </servers>
+                    </settings>"""
+
+                    bat 'mvn deploy -s settings-nexus.xml -DskipTests'
+                }
             }
         }
 
-        stage('5. Package JAR') {
+        stage('BUILDING OUR IMAGE') {
             steps {
-                bat """
-                    set "JAVA_HOME=${JDK_HOME}"
-                    set "PATH=${MAVEN_HOME}\\bin;${JDK_HOME}\\bin;%PATH%"
-                    mvn package -DskipTests -s "${MAVEN_SETTINGS}"
-                """
+                bat "docker build -t %DOCKER_IMAGE% ."
             }
         }
 
-        stage('6. Deploy to Nexus') {
+        stage('DEPLOY OUR IMAGE') {
             steps {
-                bat """
-                    set "JAVA_HOME=${JDK_HOME}"
-                    set "PATH=${MAVEN_HOME}\\bin;${JDK_HOME}\\bin;%PATH%"
-                    mvn deploy -DskipTests -s "${MAVEN_SETTINGS}"
-                """
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'docker login -u "%DOCKER_USER%" -p "%DOCKER_PASS%"'
+                    bat 'docker push %DOCKER_IMAGE%'
+                    bat 'docker logout'
+                }
             }
         }
 
-        stage('7. Docker Build') {
+        stage('Test AWS Credentials') {
             steps {
-                bat "docker build -t ${DOCKER_IMAGE} ."
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'aws sts get-caller-identity'
+                }
             }
         }
-    }
 
-    post {
-        success {
-            echo "Pipeline completed successfully!"
-            echo "SonarQube: http://localhost:9000"
-            echo "Nexus: http://localhost:8081"
+        stage('SETUP TERRAFORM') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    dir('terraform') {
+                        bat 'terraform init'
+                        bat 'terraform apply -auto-approve'
+                    }
+                }
+            }
         }
-        failure {
-            echo "Pipeline failed. Check the stage logs in Console Output."
+
+        stage('UPDATE KUBECONFIG') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'aws eks update-kubeconfig --region us-east-1 --name achat-cluster'
+                }
+            }
+        }
+
+        stage('DEPLOY TO AWS KUBERNETES') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+                ]) {
+                    bat 'kubectl apply -f k8s/deployment.yaml'
+                    bat 'kubectl rollout restart deployment/achat-app'
+                    bat 'kubectl get pods'
+                    bat 'kubectl get svc achat-service'
+                }
+            }
         }
     }
 }

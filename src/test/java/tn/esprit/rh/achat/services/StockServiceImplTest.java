@@ -10,6 +10,7 @@ import tn.esprit.rh.achat.entities.Stock;
 import tn.esprit.rh.achat.repositories.StockRepository;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,15 +108,16 @@ public class StockServiceImplTest {
     @Test
     public void testRetrieveStatusStock() {
         Stock s = new Stock();
-        s.setLibelleStock("Stock Rouge");
+        s.setLibelleStock("Stock Alerte");
         s.setQte(2);
         s.setQteMin(10);
-        when(stockRepository.retrieveStatusStock()).thenReturn(Arrays.asList(s));
+
+        when(stockRepository.retrieveStatusStock()).thenReturn(Collections.singletonList(s));
 
         String result = stockService.retrieveStatusStock();
 
         Assertions.assertNotNull(result);
-        Assertions.assertTrue(result.contains("Stock Rouge"));
+        Assertions.assertTrue(result.contains("Stock Alerte"));
         verify(stockRepository, times(1)).retrieveStatusStock();
     }
 }
