@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -97,5 +98,16 @@ class ProduitServiceImplTest {
         // Verifies the product was saved after the stock was attached
         verify(produitRepository, times(1)).save(p);
         assertEquals(s, p.getStock(), "The stock should be successfully assigned to the product.");
+    }
+
+    // --- assignProduitToStock: produit not found (null branch) ---
+    @Test
+    void testAssignProduitToStockProduitNull() {
+        Mockito.when(produitRepository.findById(99L)).thenReturn(Optional.empty());
+        Mockito.when(stockRepository.findById(2L)).thenReturn(Optional.of(new Stock()));
+
+        produitService.assignProduitToStock(99L, 2L);
+
+        verify(produitRepository, never()).save(any());
     }
 }

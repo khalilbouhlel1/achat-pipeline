@@ -70,6 +70,19 @@ public class OperateurServiceImplTest {
     }
 
     @Test
+    public void testUpdateOperateur() {
+        Operateur op = new Operateur(1L, "Ali", "Ben Salah", "pwd123", null);
+
+        when(operateurRepository.save(any(Operateur.class))).thenReturn(op);
+
+        Operateur result = operateurService.updateOperateur(op);
+
+        assertNotNull(result);
+        assertEquals("Ali", result.getNom());
+        verify(operateurRepository, times(1)).save(op);
+    }
+
+    @Test
     public void testDeleteOperateur() {
         doNothing().when(operateurRepository).deleteById(1L);
 

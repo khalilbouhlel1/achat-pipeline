@@ -75,10 +75,7 @@ pipeline {
             }
         }
 
-        // =========================================================================
-        // AWS Deployment Stages (Skipped until AWS credentials are provided)
-        // =========================================================================
-        /*
+        
         stage('Test AWS Credentials') {
             steps {
                 withCredentials([
@@ -132,6 +129,5 @@ pipeline {
                 }
             }
         }
-        */
         }
 }

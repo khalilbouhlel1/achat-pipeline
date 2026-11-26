@@ -107,4 +107,58 @@ class FournisseurServiceImplTest {
         assertTrue(f.getSecteurActivites().contains(sa));
         verify(fournisseurRepository, times(1)).save(f);
     }
+
+    // --- updateFournisseur: df == null branch in saveDetailFournisseur ---
+    @Test
+    void testUpdateFournisseurNullDetailFournisseur() {
+        Fournisseur f = new Fournisseur();
+        f.setDetailFournisseur(null);
+
+        when(fournisseurRepository.save(any(Fournisseur.class))).thenReturn(f);
+
+        Fournisseur result = fournisseurService.updateFournisseur(f);
+
+        assertNotNull(result);
+        verify(detailFournisseurRepository, never()).save(any());
+        verify(fournisseurRepository, times(1)).save(f);
+    }
+
+    // --- assignSecteurActiviteToFournisseur: fournisseur not found ---
+    @Test
+    void testAssignSecteurActiviteToFournisseurFournisseurNull() {
+        when(fournisseurRepository.findById(99L)).thenReturn(Optional.empty());
+        when(secteurActiviteRepository.findById(2L)).thenReturn(Optional.of(new SecteurActivite()));
+
+        fournisseurService.assignSecteurActiviteToFournisseur(2L, 99L);
+
+        verify(fournisseurRepository, never()).save(any());
+    }
+
+    // --- assignSecteurActiviteToFournisseur: secteur not found ---
+    @Test
+    void testAssignSecteurActiviteToFournisseurSecteurNull() {
+        Fournisseur f = new Fournisseur();
+        f.setSecteurActivites(new HashSet<>());
+        when(fournisseurRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(secteurActiviteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        fournisseurService.assignSecteurActiviteToFournisseur(99L, 1L);
+
+        verify(fournisseurRepository, never()).save(any());
+    }
+
+    // --- assignSecteurActiviteToFournisseur: secteurActivites == null ---
+    @Test
+    void testAssignSecteurActiviteToFournisseurSecteurActivitesNull() {
+        Fournisseur f = new Fournisseur();
+        f.setSecteurActivites(null);
+        SecteurActivite sa = new SecteurActivite();
+
+        when(fournisseurRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(secteurActiviteRepository.findById(2L)).thenReturn(Optional.of(sa));
+
+        fournisseurService.assignSecteurActiviteToFournisseur(2L, 1L);
+
+        verify(fournisseurRepository, never()).save(any());
+    }
 }

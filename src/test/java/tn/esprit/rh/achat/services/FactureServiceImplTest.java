@@ -161,4 +161,70 @@ class FactureServiceImplTest {
 
         assertEquals(0f, pourcentage, 0.001f);
     }
+
+    // --- cancelFacture: null facture branch ---
+    @Test
+    void testCancelFactureNotFound() {
+        when(factureRepository.findById(99L)).thenReturn(Optional.empty());
+        doNothing().when(factureRepository).updateFacture(99L);
+
+        factureService.cancelFacture(99L);
+
+        verify(factureRepository, never()).save(any());
+        verify(factureRepository, times(1)).updateFacture(99L);
+    }
+
+    // --- getFacturesByFournisseur: fournisseur found but getFactures() == null ---
+    @Test
+    void testGetFacturesByFournisseurNullFactures() {
+        Fournisseur fournisseur = new Fournisseur();
+        fournisseur.setFactures(null);
+
+        when(fournisseurRepository.findById(2L)).thenReturn(Optional.of(fournisseur));
+
+        List<Facture> result = factureService.getFacturesByFournisseur(2L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    // --- assignOperateurToFacture: operateur null ---
+    @Test
+    void testAssignOperateurToFactureOperateurNull() {
+        Facture f = new Facture();
+        when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(operateurRepository.findById(99L)).thenReturn(Optional.empty());
+
+        factureService.assignOperateurToFacture(99L, 1L);
+
+        verify(operateurRepository, never()).save(any());
+    }
+
+    // --- assignOperateurToFacture: facture null ---
+    @Test
+    void testAssignOperateurToFactureFactureNull() {
+        Operateur op = new Operateur();
+        op.setFactures(new HashSet<>());
+        when(factureRepository.findById(99L)).thenReturn(Optional.empty());
+        when(operateurRepository.findById(1L)).thenReturn(Optional.of(op));
+
+        factureService.assignOperateurToFacture(1L, 99L);
+
+        verify(operateurRepository, never()).save(any());
+    }
+
+    // --- assignOperateurToFacture: operateur.getFactures() == null ---
+    @Test
+    void testAssignOperateurToFactureOperateurFacturesNull() {
+        Facture f = new Facture();
+        Operateur op = new Operateur();
+        op.setFactures(null); // getFactures() returns null => condition false
+
+        when(factureRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(operateurRepository.findById(2L)).thenReturn(Optional.of(op));
+
+        factureService.assignOperateurToFacture(2L, 1L);
+
+        verify(operateurRepository, never()).save(any());
+    }
 }
