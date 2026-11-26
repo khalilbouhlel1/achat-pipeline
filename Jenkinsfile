@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('CHECKOUT GIT') {
             steps {
-                git branch: 'main', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
+                git branch: 'dev-khalil', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
             }
         }
 
