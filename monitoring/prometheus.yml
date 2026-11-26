@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'achat-spring-boot'
+    metrics_path: '/SpringMVC/actuator/prometheus'
+    static_configs:
+      # Points to your live AWS EKS LoadBalancer:
+      - targets: ['a482007dc940c40a08058ec35743de89-420803392.us-east-1.elb.amazonaws.com:8089']
+      # (If testing locally instead of AWS, replace the line above with: ['host.docker.internal:8089'])

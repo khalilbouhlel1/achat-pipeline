@@ -51,6 +51,7 @@ spec:
       containers:
         - name: achat-app
           image: lotfii1/achat-app:dev-lotfi
+          imagePullPolicy: Always
           ports:
             - containerPort: 8089
           env:
