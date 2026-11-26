@@ -1,17 +1,17 @@
 pipeline {
     agent any
-    tools {
-        maven 'M3'
+tools {
+        maven 'apache-maven-3.10.0'
     }
     environment {
-        DOCKER_IMAGE = "loo9a/achat:1.0-SNAPSHOT"
+        DOCKER_IMAGE = "khalilbouhlel1/achat:1.0-SNAPSHOT"
         AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {
         stage('CHECKOUT GIT') {
             steps {
-                git branch: 'dev-khalil', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
+                git branch: 'main', url: 'https://github.com/khalilbouhlel1/achat-pipeline.git'
             }
         }
 
@@ -34,12 +34,12 @@ pipeline {
         }
 
         stage('MVN SONARQUBE') {
-            steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
-                }
-            }
-        }
+         steps {
+             withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                 bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=achat -Dsonar.host.url=http://localhost:9000 -Dsonar.token=%SONAR_TOKEN% -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.coverage.exclusions=**/entities/**,**/config/**,**/*Application.java,**/controllers/**"
+             }
+         }
+     }
 
         stage('PUBLISH TO NEXUS') {
             steps {
@@ -74,20 +74,19 @@ pipeline {
                 }
             }
         }
-
         stage('Test AWS Credentials') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                    string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
-                ]) {
-                    bat 'aws sts get-caller-identity'
-                }
-            }
-        }
-
-        stage('SETUP TERRAFORM') {
+         steps {
+             withCredentials([
+                 string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                 string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                 string(credentialsId: 'aws-session-token', variable: 'AWS_SESSION_TOKEN')
+             ]) {
+                 bat 'aws sts get-caller-identity'
+             }
+         }
+     
+    }
+    stage('SETUP TERRAFORM') {
             steps {
                 withCredentials([
                     string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
@@ -101,7 +100,6 @@ pipeline {
                 }
             }
         }
-
         stage('UPDATE KUBECONFIG') {
             steps {
                 withCredentials([
@@ -128,5 +126,5 @@ pipeline {
                 }
             }
         }
-    }
+        }
 }
