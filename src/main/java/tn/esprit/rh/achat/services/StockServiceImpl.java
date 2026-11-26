@@ -17,34 +17,27 @@ public class StockServiceImpl implements IStockService {
 	@Autowired
 	StockRepository stockRepository;
 
-
 	@Override
 	public List<Stock> retrieveAllStocks() {
-		// récuperer la date à l'instant t1
 		log.info("In method retrieveAllStocks");
 		List<Stock> stocks = (List<Stock>) stockRepository.findAll();
 		for (Stock stock : stocks) {
-			log.info(" Stock : " + stock);
+			log.info(" Stock : {}", stock);
 		}
 		log.info("out of method retrieveAllStocks");
-		// récuperer la date à l'instant t2
-		// temps execution = t2 - t1
 		return stocks;
 	}
 
 	@Override
 	public Stock addStock(Stock s) {
-		// récuperer la date à l'instant t1
 		log.info("In method addStock");
 		return stockRepository.save(s);
-		
 	}
 
 	@Override
 	public void deleteStock(Long stockId) {
 		log.info("In method deleteStock");
 		stockRepository.deleteById(stockId);
-
 	}
 
 	@Override
@@ -59,9 +52,8 @@ public class StockServiceImpl implements IStockService {
 		log.info("In method retrieveStock");
 		Stock stock = stockRepository.findById(stockId).orElse(null);
 		log.info("out of method retrieveStock");
-		 long elapsedTime = System.currentTimeMillis() - start;
-		log.info("Method execution time: " + elapsedTime + " milliseconds.");
-
+		long elapsedTime = System.currentTimeMillis() - start;
+		log.info("Method execution time: {} milliseconds.", elapsedTime);
 		return stock;
 	}
 
@@ -70,18 +62,24 @@ public class StockServiceImpl implements IStockService {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		Date now = new Date();
 		String msgDate = sdf.format(now);
-		String finalMessage = "";
-		String newLine = System.getProperty("line.separator");
-		List<Stock> stocksEnRouge = (List<Stock>) stockRepository.retrieveStatusStock();
-		for (int i = 0; i < stocksEnRouge.size(); i++) {
-			finalMessage = newLine + finalMessage + msgDate + newLine + ": le stock "
-					+ stocksEnRouge.get(i).getLibelleStock() + " a une quantité de " + stocksEnRouge.get(i).getQte()
-					+ " inférieur à la quantité minimale a ne pas dépasser de " + stocksEnRouge.get(i).getQteMin()
-					+ newLine;
-
+		StringBuilder finalMessage = new StringBuilder();
+		String newLine = System.lineSeparator();
+		List<Stock> stocksEnRouge = stockRepository.retrieveStatusStock();
+		for (Stock stock : stocksEnRouge) {
+			finalMessage.append(newLine)
+					.append(msgDate)
+					.append(newLine)
+					.append(": le stock ")
+					.append(stock.getLibelleStock())
+					.append(" a une quantité de ")
+					.append(stock.getQte())
+					.append(" inférieur à la quantité minimale a ne pas dépasser de ")
+					.append(stock.getQteMin())
+					.append(newLine);
 		}
-		log.info(finalMessage);
-		return finalMessage;
+		String result = finalMessage.toString();
+		log.info(result);
+		return result;
 	}
 
 }

@@ -8,7 +8,6 @@ import tn.esprit.rh.achat.entities.Fournisseur;
 import tn.esprit.rh.achat.entities.SecteurActivite;
 import tn.esprit.rh.achat.repositories.DetailFournisseurRepository;
 import tn.esprit.rh.achat.repositories.FournisseurRepository;
-import tn.esprit.rh.achat.repositories.ProduitRepository;
 import tn.esprit.rh.achat.repositories.SecteurActiviteRepository;
 
 import java.util.Date;
@@ -23,65 +22,61 @@ public class FournisseurServiceImpl implements IFournisseurService {
 	@Autowired
 	DetailFournisseurRepository detailFournisseurRepository;
 	@Autowired
-	ProduitRepository produitRepository;
-	@Autowired
 	SecteurActiviteRepository secteurActiviteRepository;
 
 	@Override
 	public List<Fournisseur> retrieveAllFournisseurs() {
 		List<Fournisseur> fournisseurs = (List<Fournisseur>) fournisseurRepository.findAll();
 		for (Fournisseur fournisseur : fournisseurs) {
-			log.info(" fournisseur : " + fournisseur);
+			log.info(" fournisseur : {}", fournisseur);
 		}
 		return fournisseurs;
 	}
 
-
-	public Fournisseur addFournisseur(Fournisseur f /*Master*/) {
-		DetailFournisseur df= new DetailFournisseur();//Slave
-		df.setDateDebutCollaboration(new Date()); //util
-		//On affecte le "Slave" au "Master"
-		f.setDetailFournisseur(df);	
+	@Override
+	public Fournisseur addFournisseur(Fournisseur f) {
+		DetailFournisseur df = new DetailFournisseur();
+		df.setDateDebutCollaboration(new Date());
+		f.setDetailFournisseur(df);
 		fournisseurRepository.save(f);
 		return f;
 	}
 	
-	private DetailFournisseur  saveDetailFournisseur(Fournisseur f){
+	private DetailFournisseur saveDetailFournisseur(Fournisseur f) {
 		DetailFournisseur df = f.getDetailFournisseur();
-		detailFournisseurRepository.save(df);
+		if (df != null) {
+			detailFournisseurRepository.save(df);
+		}
 		return df;
 	}
 
+	@Override
 	public Fournisseur updateFournisseur(Fournisseur f) {
 		DetailFournisseur df = saveDetailFournisseur(f);
-		f.setDetailFournisseur(df);	
+		f.setDetailFournisseur(df);
 		fournisseurRepository.save(f);
 		return f;
 	}
 
 	@Override
 	public void deleteFournisseur(Long fournisseurId) {
+		log.info("In method deleteFournisseur");
 		fournisseurRepository.deleteById(fournisseurId);
-
 	}
 
 	@Override
 	public Fournisseur retrieveFournisseur(Long fournisseurId) {
-
-		Fournisseur fournisseur = fournisseurRepository.findById(fournisseurId).orElse(null);
-		return fournisseur;
+		return fournisseurRepository.findById(fournisseurId).orElse(null);
 	}
 
 	@Override
 	public void assignSecteurActiviteToFournisseur(Long idSecteurActivite, Long idFournisseur) {
 		Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
 		SecteurActivite secteurActivite = secteurActiviteRepository.findById(idSecteurActivite).orElse(null);
-        fournisseur.getSecteurActivites().add(secteurActivite);
-        fournisseurRepository.save(fournisseur);
-		
-		
+		if (fournisseur != null && secteurActivite != null && fournisseur.getSecteurActivites() != null) {
+			fournisseur.getSecteurActivites().add(secteurActivite);
+			fournisseurRepository.save(fournisseur);
+		}
 	}
-
-	
 
 }
