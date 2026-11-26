@@ -1,6 +1,6 @@
 pipeline {
     agent any
-tools {
+    tools {
         maven 'apache-maven-3.10.0'
     }
     environment {
