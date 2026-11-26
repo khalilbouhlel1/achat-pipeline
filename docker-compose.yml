@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
 
   app-achat:
-    image: khalilbouhlel1/achat:1.0-SNAPSHOT
+    image: khalilbouhlel/achat:1.0-SNAPSHOT
     container_name: achat-container
     ports:
       - "8089:8089"

@@ -4,7 +4,7 @@ pipeline {
         maven 'apache-maven-3.10.0'
     }
     environment {
-        DOCKER_IMAGE = "khalilbouhlel1/achat:1.0-SNAPSHOT"
+        DOCKER_IMAGE = "khalilbouhlel/achat:1.0-SNAPSHOT"
         AWS_DEFAULT_REGION = "us-east-1"
     }
 

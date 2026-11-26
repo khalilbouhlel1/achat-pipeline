@@ -57,7 +57,7 @@ spec:
     spec:
       containers:
         - name: achat-app
-          image: khalilbouhlel1/achat:1.0-SNAPSHOT
+          image: khalilbouhlel/achat:1.0-SNAPSHOT
           imagePullPolicy: Always
           ports:
             - containerPort: 8089
