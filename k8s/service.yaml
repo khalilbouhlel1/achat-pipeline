@@ -2,11 +2,14 @@
 kind: Service
 metadata:
   name: achat-app-service
+  labels:
+    app: achat-app
 spec:
   type: LoadBalancer
   selector:
     app: achat-app
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8089
