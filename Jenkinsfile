@@ -128,21 +128,14 @@ tools {
         }
         }
 
-    post {
+   post {
         always {
-            script {
-                def logLines = currentBuild.rawBuild.getLog(150).join('\n')
-                mail(
-                    to: 'faroukslimene115@gmail.com',
-                    subject: "Jenkins ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """Job: ${env.JOB_NAME}
+            mail(
+                to: 'faroukslimene115@gmail.com',
+                subject: "Jenkins ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """Job: ${env.JOB_NAME}
 Build #${env.BUILD_NUMBER} - Status: ${currentBuild.currentResult}
-Build URL: ${env.BUILD_URL}
-
---- Last 150 Log Lines ---
-${logLines}"""
-                )
-            }
+Console Log URL: ${env.BUILD_URL}console"""
+            )
         }
     }
-}
