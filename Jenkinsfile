@@ -78,18 +78,22 @@ pipeline {
 
         stage('Test AWS Credentials') {
             steps {
-                withAwsSession {
-                    bat 'aws sts get-caller-identity'
+                script {
+                    withAwsSession {
+                        bat 'aws sts get-caller-identity'
+                    }
                 }
             }
         }
 
         stage('SETUP TERRAFORM') {
             steps {
-                withAwsSession {
-                    dir('terraform') {
-                        bat 'terraform init'
-                        bat 'terraform apply -auto-approve'
+                script {
+                    withAwsSession {
+                        dir('terraform') {
+                            bat 'terraform init'
+                            bat 'terraform apply -auto-approve'
+                        }
                     }
                 }
             }
@@ -97,19 +101,23 @@ pipeline {
 
         stage('UPDATE KUBECONFIG') {
             steps {
-                withAwsSession {
-                    bat 'aws eks update-kubeconfig --region us-east-1 --name achat-cluster'
+                script {
+                    withAwsSession {
+                        bat 'aws eks update-kubeconfig --region us-east-1 --name achat-cluster'
+                    }
                 }
             }
         }
 
         stage('DEPLOY TO AWS KUBERNETES') {
             steps {
-                withAwsSession {
-                    bat 'kubectl apply -f k8s/deployment.yaml'
-                    bat 'kubectl rollout restart deployment/achat-app'
-                    bat 'kubectl get pods'
-                    bat 'kubectl get svc achat-service'
+                script {
+                    withAwsSession {
+                        bat 'kubectl apply -f k8s/deployment.yaml'
+                        bat 'kubectl rollout restart deployment/achat-app'
+                        bat 'kubectl get pods'
+                        bat 'kubectl get svc achat-service'
+                    }
                 }
             }
         }
