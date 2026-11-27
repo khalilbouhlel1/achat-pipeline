@@ -138,4 +138,4 @@ Build #${env.BUILD_NUMBER} - Status: ${currentBuild.currentResult}
 Console Log URL: ${env.BUILD_URL}console"""
             )
         }
-    }
+    }}
